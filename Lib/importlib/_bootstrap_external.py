@@ -1432,6 +1432,46 @@ class FileFinder:
 
         return path_hook_for_FileFinder
 
+    def iter_modules(self, prefix=''):
+        if self.path is None or not _path_isdir(self.path):
+            return
+
+        yielded = {}
+        import inspect
+        try:
+            filenames = _os.listdir(self.path)
+        except OSError:
+            # ignore unreadable directories like import does
+            filenames = []
+        filenames.sort()  # handle packages before same-named modules
+
+        for fn in filenames:
+            modname = inspect.getmodulename(fn)
+            if modname=='__init__' or modname in yielded:
+                continue
+
+            path = _path_join(self.path, fn)
+            ispkg = False
+
+            if not modname and _path_isdir(path) and '.' not in fn:
+                modname = fn
+                try:
+                    dircontents = _os.listdir(path)
+                except OSError:
+                    # ignore unreadable directories like import does
+                    dircontents = []
+                for fn in dircontents:
+                    subname = inspect.getmodulename(fn)
+                    if subname=='__init__':
+                        ispkg = True
+                        break
+                else:
+                    continue    # not a package
+
+            if modname and '.' not in modname:
+                yielded[modname] = 1
+                yield prefix + modname, ispkg
+
     def __repr__(self):
         return f'FileFinder({self.path!r})'
 
