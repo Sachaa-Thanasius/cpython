@@ -230,6 +230,35 @@ class zipimporter(_bootstrap_external._LoaderBasics):
         _zip_directory_cache.pop(self.archive, None)
 
 
+    def iter_modules(self, prefix=''):
+        dirlist = sorted(_zip_directory_cache[self.archive])
+        _prefix = self.prefix
+        plen = len(_prefix)
+        yielded = {}
+        import inspect
+        for fn in dirlist:
+            if not fn.startswith(_prefix):
+                continue
+
+            fn = fn[plen:].split(path_sep)
+
+            if len(fn)==2 and fn[1].startswith('__init__.py'):
+                if fn[0] not in yielded:
+                    yielded[fn[0]] = 1
+                    yield prefix + fn[0], True
+
+            if len(fn)!=1:
+                continue
+
+            modname = inspect.getmodulename(fn[0])
+            if modname=='__init__':
+                continue
+
+            if modname and '.' not in modname and modname not in yielded:
+                yielded[modname] = 1
+                yield prefix + modname, False
+
+
     def __repr__(self):
         return f'<zipimporter object "{self.archive}{path_sep}{self.prefix}">'
 
