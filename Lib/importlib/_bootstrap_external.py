@@ -1436,7 +1436,7 @@ class FileFinder:
         if self.path is None or not _path_isdir(self.path):
             return
 
-        yielded = {}
+        yielded = set()
         import inspect
         try:
             filenames = _os.listdir(self.path)
@@ -1469,7 +1469,7 @@ class FileFinder:
                     continue    # not a package
 
             if modname and '.' not in modname:
-                yielded[modname] = 1
+                yielded.add(modname)
                 yield prefix + modname, ispkg
 
     def __repr__(self):

@@ -234,7 +234,7 @@ class zipimporter(_bootstrap_external._LoaderBasics):
         dirlist = sorted(_zip_directory_cache[self.archive])
         _prefix = self.prefix
         plen = len(_prefix)
-        yielded = {}
+        yielded = set()
         import inspect
         for fn in dirlist:
             if not fn.startswith(_prefix):
@@ -244,7 +244,7 @@ class zipimporter(_bootstrap_external._LoaderBasics):
 
             if len(fn)==2 and fn[1].startswith('__init__.py'):
                 if fn[0] not in yielded:
-                    yielded[fn[0]] = 1
+                    yielded.add(fn[0])
                     yield prefix + fn[0], True
 
             if len(fn)!=1:
@@ -255,7 +255,7 @@ class zipimporter(_bootstrap_external._LoaderBasics):
                 continue
 
             if modname and '.' not in modname and modname not in yielded:
-                yielded[modname] = 1
+                yielded.add(modname)
                 yield prefix + modname, False
 
 
