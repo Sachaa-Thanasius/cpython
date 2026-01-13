@@ -219,6 +219,20 @@ def _write_atomic(path, data, mode=0o666):
         raise
 
 
+def _get_module_name(path):
+    """Replacement for inspect.getmodulename."""
+
+    fname = _path_split(path)[1]
+    # Check for paths that look like an actual module file
+    suffixes = SOURCE_SUFFIXES + BYTECODE_SUFFIXES + EXTENSION_SUFFIXES
+    suffixes = [(-len(suffix), suffix) for suffix in suffixes]
+    suffixes.sort() # try longest suffixes first, in case they overlap
+    for neglen, suffix in suffixes:
+        if fname.endswith(suffix):
+            return fname[:neglen]
+    return None
+
+
 _code_type = type(_write_atomic.__code__)
 
 MAGIC_NUMBER = _imp.pyc_magic_number_token.to_bytes(4, 'little')
@@ -1437,7 +1451,6 @@ class FileFinder:
             return
 
         yielded = set()
-        import inspect
         try:
             filenames = _os.listdir(self.path)
         except OSError:
@@ -1446,7 +1459,7 @@ class FileFinder:
         filenames.sort()  # handle packages before same-named modules
 
         for fn in filenames:
-            modname = inspect.getmodulename(fn)
+            modname = _get_module_name(fn)
             if modname=='__init__' or modname in yielded:
                 continue
 
@@ -1461,7 +1474,7 @@ class FileFinder:
                     # ignore unreadable directories like import does
                     dircontents = []
                 for fn in dircontents:
-                    subname = inspect.getmodulename(fn)
+                    subname = _get_module_name(fn)
                     if subname=='__init__':
                         ispkg = True
                         break

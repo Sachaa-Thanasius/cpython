@@ -235,7 +235,6 @@ class zipimporter(_bootstrap_external._LoaderBasics):
         _prefix = self.prefix
         plen = len(_prefix)
         yielded = set()
-        import inspect
         for fn in dirlist:
             if not fn.startswith(_prefix):
                 continue
@@ -250,7 +249,7 @@ class zipimporter(_bootstrap_external._LoaderBasics):
             if len(fn)!=1:
                 continue
 
-            modname = inspect.getmodulename(fn[0])
+            modname = _bootstrap_external._get_module_name(fn[0])
             if modname=='__init__':
                 continue
 
